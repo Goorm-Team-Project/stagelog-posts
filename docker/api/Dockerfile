@@ -11,8 +11,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt /app/requirements.txt
 COPY _shared /opt/stagelog-shared
-RUN test -f /opt/stagelog-shared/pyproject.toml
-RUN pip install --upgrade pip && pip install -r requirements.txt && pip install /opt/stagelog-shared
+RUN set -eu; \
+    if [ -f /opt/stagelog-shared/pyproject.toml ]; then \
+      SHARED_PKG_DIR=/opt/stagelog-shared; \
+    elif [ -f /opt/stagelog-shared/shared/pyproject.toml ]; then \
+      SHARED_PKG_DIR=/opt/stagelog-shared/shared; \
+    else \
+      echo "shared package root not found under /opt/stagelog-shared" >&2; \
+      find /opt/stagelog-shared -maxdepth 2 -type f | sort >&2; \
+      exit 1; \
+    fi; \
+    pip install --upgrade pip && pip install -r requirements.txt && pip install "${SHARED_PKG_DIR}"
 
 # 운영환경을 위해 소스 코드 전체를 이미지 안에 넣기
 COPY . /app/
