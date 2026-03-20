@@ -10,19 +10,19 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--databases",
-            default=",".join(getattr(settings, "OUTBOX_DATABASES", ["default"])),
+            default="default",
             help="Comma separated DB aliases. ex) default,auth_db,events_db",
         )
-        parser.add_argument("--limit", type=int, default=settings.OUTBOX_PUBLISH_BATCH_SIZE)
+        parser.add_argument("--limit", type=int, default=50)
         parser.add_argument(
             "--aggregate-type",
-            default=settings.OUTBOX_NOTIFICATION_AGGREGATE_TYPE,
+            default="notification",
         )
-        parser.add_argument("--max-retries", type=int, default=settings.OUTBOX_MAX_RETRIES)
+        parser.add_argument("--max-retries", type=int, default=5)
         parser.add_argument(
             "--retry-base-delay-seconds",
             type=int,
-            default=settings.OUTBOX_RETRY_BASE_DELAY_SECONDS,
+            default=30,
         )
 
     def handle(self, *args, **options):
