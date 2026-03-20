@@ -13,6 +13,7 @@ spec:
       labels:
         app: posts-svc
     spec:
+      serviceAccountName: stagelog-posts-sa
       containers:
       - name: posts-svc
         image: 430118823715.dkr.ecr.ap-northeast-2.amazonaws.com/stagelog-posts:latest
