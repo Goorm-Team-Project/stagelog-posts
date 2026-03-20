@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: posts-svc
+  namespace: stagelog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: posts-svc
+  template:
+    metadata:
+      labels:
+        app: posts-svc
+    spec:
+      containers:
+      - name: posts-svc
+        image: 430118823715.dkr.ecr.ap-northeast-2.amazonaws.com/stagelog-posts:latest
+        imagePullPolicy: Always
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: config.settings
+        volumeMounts:
+        - name: env-file
+          mountPath: /app/.env
+          subPath: .env
+          readOnly: true
+        ports:
+        - containerPort: 80
+      volumes:
+      - name: env-file
+        secret:
+          secretName: stagelog-posts-env
+          items:
+          - key: .env
+            path: .env

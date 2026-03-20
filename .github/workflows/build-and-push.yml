@@ -1,0 +1,73 @@
+name: Build And Push
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      shared_ref:
+        description: stagelog-shared git ref
+        required: false
+        default: main
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: stagelog-posts
+  SHARED_REPOSITORY: Goorm-Team-Project/stagelog-shared
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout service repository
+        uses: actions/checkout@v4
+
+      - name: Checkout shared contracts
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SHARED_REPOSITORY }}
+          token: ${{ secrets.SHARED_REPO_READ_TOKEN }}
+          path: _shared
+          ref: ${{ github.event.inputs.shared_ref || 'main' }}
+          fetch-depth: 1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr describe-repositories --repository-names "${ECR_REPOSITORY}" --region "${AWS_REGION}" >/dev/null 2>&1 || \
+          aws ecr create-repository --repository-name "${ECR_REPOSITORY}" --region "${AWS_REGION}"
+
+      - name: Resolve image metadata
+        id: meta
+        run: |
+          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+          IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+          echo "image_uri=${IMAGE_URI}" >> "${GITHUB_OUTPUT}"
+          echo "sha_tag=${GITHUB_SHA::12}" >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/api/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            ${{ steps.meta.outputs.image_uri }}:${{ steps.meta.outputs.sha_tag }}
+            ${{ steps.meta.outputs.image_uri }}:latest

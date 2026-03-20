@@ -1,0 +1,24 @@
+FROM python:3.12.3-slim
+
+WORKDIR /app
+
+# mysqlclient 빌드에 필요한 의존성(목적: WSL/로컬 차이 제거)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential pkg-config \
+    libmariadb-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+COPY _shared /opt/stagelog-shared
+RUN test -f /opt/stagelog-shared/pyproject.toml
+RUN pip install --upgrade pip && pip install -r requirements.txt && pip install /opt/stagelog-shared
+
+# 운영환경을 위해 소스 코드 전체를 이미지 안에 넣기
+COPY . /app/
+RUN rm -rf /app/_shared
+
+# 소스는 volume mount로 개발(빠른 빌드). 운영에서는 COPY 방식으로 변경
+EXPOSE 80
+
+CMD ["sh", "-lc", "python manage.py collectstatic --noinput && python manage.py migrate && gunicorn --bind 0.0.0.0:80 config.wsgi:application --access-logfile - --error-logfile - --log-level debug --capture-output --timeout 120"]
