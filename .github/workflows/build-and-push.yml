@@ -34,7 +34,7 @@ jobs:
           repository: ${{ env.SHARED_REPOSITORY }}
           path: _shared
           ref: ${{ github.event.inputs.shared_ref || 'develop' }}
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -79,7 +79,7 @@ jobs:
           IMAGE_URI: ${{ steps.meta.outputs.image_uri }}
         run: |
           # 1. GitOps repo clone
-          git clone https://${GIT_TOKEN}github.com/Goorm-Team-Project/stagelog-gitops.git
+          git clone https://${GIT_TOKEN}@github.com/Goorm-Team-Project/stagelog-gitops.git
           cd gitops-repo
 
           # 2. values.yaml 수정 (경로 맞게 수정해야됨)
