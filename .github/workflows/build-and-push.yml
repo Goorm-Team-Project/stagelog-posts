@@ -73,11 +73,11 @@ jobs:
       
       - name: Update GitOps repo
         env:
-          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
           IMAGE_TAG: ${{ steps.meta.outputs.sha_tag }}
           IMAGE_URI: ${{ steps.meta.outputs.image_uri }}
         run: |
-          git clone https://${GIT_TOKEN}@github.com/Goorm-Team-Project/stagelog-gitops.git
+          git clone https://${GITOPS_TOKEN}@github.com/Goorm-Team-Project/stagelog-gitops.git
           cd stagelog-gitops         
           sed -i "s|tag: .*|tag: ${IMAGE_TAG}|g" charts/backend/values/dev/posts.yaml        
           
