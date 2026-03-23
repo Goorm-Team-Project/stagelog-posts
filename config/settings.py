@@ -74,7 +74,7 @@ if db_mode == 'sqlite':
         }
     }
 else:
-    db_ssl_ca = env("DB_SSL_CA", default="/etc/ssl/certs/ca-certificates.crt")
+    db_ssl_ca = env("DB_SSL_CA", default="/etc/ssl/certs/rds-global-bundle.pem")
     db_use_ssl = env.bool("DB_USE_SSL", default=True)
     mysql_options = {"charset": "utf8mb4"}
     if db_use_ssl:
