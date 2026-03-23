@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - develop
+      - feat/changetag
   workflow_dispatch:
     inputs:
       shared_ref:
@@ -70,3 +71,26 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.image_uri }}:${{ steps.meta.outputs.sha_tag }}
             ${{ steps.meta.outputs.image_uri }}:latest
+
+      - name: Update GitOps repo
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          IMAGE_TAG: ${{ steps.meta.outputs.sha_tag }}
+          IMAGE_URI: ${{ steps.meta.outputs.image_uri }}
+        run: |
+          # 1. GitOps repo clone
+          git clone https://${GIT_TOKEN}github.com/Goorm-Team-Project/stagelog-gitops.git
+          cd gitops-repo
+
+          # 2. values.yaml 수정 (경로 맞게 수정해야됨)
+          sed -i "s|tag: .*|tag: ${IMAGE_TAG}|g" charts/backend/values/dev/posts.yaml
+
+        
+          # 3. git 설정
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          # 4. commit & push
+          git add .
+          git commit -m "update posts image to ${IMAGE_TAG}" || echo "no changes"
+          git push origin main
