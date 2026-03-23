@@ -33,7 +33,7 @@ jobs:
         with:
           repository: ${{ env.SHARED_REPOSITORY }}
           path: _shared
-          ref: ${{ github.event.inputs.shared_ref || github.ref_name }}
+          ref: ${{ github.event.inputs.shared_ref || 'develop' }}
           fetch-depth: 1
 
       - name: Configure AWS credentials
