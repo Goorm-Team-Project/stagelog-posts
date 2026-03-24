@@ -15,6 +15,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 db_mode = env('DB_MODE', default='sqlite')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+ALLOWED_CIDR_NETS = env.list('ALLOWED_CIDR_NETS', default=['10.1.0.0/16'])
 
 # 2. 앱 설정 (DRF, SimpleJWT 제거)
 INSTALLED_APPS = [
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'allow_cidr.middleware.AllowCIDRMiddleware',
     'corsheaders.middleware.CorsMiddleware', # 최상단
     'django.middleware.security.SecurityMiddleware',
     'common.middleware.AutoBanMiddleware',
